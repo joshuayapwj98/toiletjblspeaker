@@ -2,23 +2,20 @@ require('dotenv').config();
 
 var createError = require('http-errors');
 var express = require('express');
-var fs = require('node:fs');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
+const { Events } = require("discord.js");
 
-const { token } = process.env.DISCORD_TOKEN;
-const client = new Client({ intents: [
-  GatewayIntentBits.Guilds,
-  GatewayIntentBits.GuildMessages,
-  GatewayIntentBits.MessageContent,
-  GatewayIntentBits.GuildMembers,
-]});
+const DiscordService = require( "./services/discord-service.js" );
+const DiscordServiceInstance = new DiscordService(
+  process.env.DISCORD_CLIENT_ID, 
+  process.env.DISCORD_GUILD_ID, 
+  process.env.DISCORD_TOKEN);
 
-client.commands = new Collection();
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+DiscordServiceInstance.init();
+DiscordServiceInstance.login();
+const client = DiscordServiceInstance.getClient;
 
 client.once("ready", () => {
   console.log("Ready!");
@@ -30,16 +27,9 @@ client.once("disconnect", () => {
   console.log("Disconnect!");
 });
 
-for (const file of commandFiles) {
-	const filePath = path.join(commandsPath, file);
-	const command = require(filePath);
-	client.commands.set(command.data.name, command);
-}
-
 client.on(Events.MessageCreate, async (message) => {
-  console.log(message);
   if (!message.author.bot) {
-    message.channel.send("deeznuts");
+    message.channel.send("Welcome to Toilet JBL Speaker bot!");
   }
 });
 
@@ -57,8 +47,6 @@ client.on(Events.InteractionCreate, async interaction => {
 		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 	}
 });
-
-client.login(token);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
