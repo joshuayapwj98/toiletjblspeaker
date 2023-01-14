@@ -2,25 +2,18 @@ require('dotenv').config();
 
 var createError = require('http-errors');
 var express = require('express');
+var fs = require('node:fs');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-const {Discord, Client, GatewayIntentBits } = require('discord.js');
-var dotenv = require('dotenv');
+const { token } = process.env.DISCORD_TOKEN;
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-dotenv.config();
-const client = new Client({
-	intents: [
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.GuildMessages,
-		GatewayIntentBits.MessageContent,
-		GatewayIntentBits.GuildMembers,
-	],
-});
-client.login(process.env.DISCORD_TOKEN);
+client.commands = new Collection();
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
 client.once("ready", () => {
   console.log("Ready!");
@@ -32,12 +25,37 @@ client.once("reconnecting", () => {
 client.once("disconnect", () => {
   console.log("Disconnect!");
 });
+for (const file of commandFiles) {
+	const filePath = path.join(commandsPath, file);
+	const command = require(filePath);
+	client.commands.set(command.data.name, command);
+}
 
 client.on("messageCreate", async (message) => {
   if (!message.author.bot) {
     message.channel.send("deeznuts");
   }
 });
+
+client.on(Events.InteractionCreate, async interaction => {
+	if (!interaction.isChatInputCommand()) return;
+
+	const command = client.commands.get(interaction.commandName);
+
+	if (!command) return;
+
+	try {
+		await command.execute(interaction);
+	} catch (error) {
+		console.error(error);
+		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+	}
+});
+
+client.login(token);
+
+var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/users');
 
 var app = express();
 
