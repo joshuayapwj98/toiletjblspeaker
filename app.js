@@ -2,51 +2,42 @@ require('dotenv').config();
 
 var createError = require('http-errors');
 var express = require('express');
+var fs = require('node:fs');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const { Events } = require("discord.js");
+const { Client, Events, Collection, GatewayIntentBits } = require('discord.js');
 
-const DiscordService = require( "./services/discord-service.js" );
-const DiscordServiceInstance = new DiscordService(
-  process.env.DISCORD_CLIENT_ID, 
-  process.env.DISCORD_GUILD_ID, 
-  process.env.DISCORD_TOKEN);
+const commandsPath = path.join(__dirname, './commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
-DiscordServiceInstance.init();
-DiscordServiceInstance.login();
-const client = DiscordServiceInstance.getClient;
+const client = new Client({ intents: [
+  GatewayIntentBits.Guilds,
+  GatewayIntentBits.GuildMessages,
+  GatewayIntentBits.MessageContent,
+  GatewayIntentBits.GuildMembers,
+]});
 
-client.once("ready", () => {
-  console.log("Ready!");
-});
-client.once("reconnecting", () => {
-  console.log("Reconnecting!");
-});
-client.once("disconnect", () => {
-  console.log("Disconnect!");
-});
+client.commands = new Collection();
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+    client.commands.set(command.data.name, command);
+}
 
-client.on(Events.MessageCreate, async (message) => {
-  if (!message.author.bot) {
-    message.channel.send("Welcome to Toilet JBL Speaker bot!");
-  }
-});
-
-client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isChatInputCommand()) return;
-
-	const command = client.commands.get(interaction.commandName);
-
-	if (!command) return;
-
-	try {
-		await command.execute(interaction);
-	} catch (error) {
-		console.error(error);
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+for (const file of eventFiles) {
+	const filePath = path.join(eventsPath, file);
+	const event = require(filePath);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else {
+		client.on(event.name, (...args) => event.execute(...args));
 	}
-});
+}
+
+client.login(this.token);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
