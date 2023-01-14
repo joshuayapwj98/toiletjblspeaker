@@ -9,7 +9,12 @@ var logger = require('morgan');
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 
 const { token } = process.env.DISCORD_TOKEN;
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [
+  GatewayIntentBits.Guilds,
+  GatewayIntentBits.GuildMessages,
+  GatewayIntentBits.MessageContent,
+  GatewayIntentBits.GuildMembers,
+]});
 
 client.commands = new Collection();
 const commandsPath = path.join(__dirname, 'commands');
@@ -17,7 +22,6 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 
 client.once("ready", () => {
   console.log("Ready!");
-  
 });
 client.once("reconnecting", () => {
   console.log("Reconnecting!");
@@ -25,13 +29,15 @@ client.once("reconnecting", () => {
 client.once("disconnect", () => {
   console.log("Disconnect!");
 });
+
 for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
 	const command = require(filePath);
 	client.commands.set(command.data.name, command);
 }
 
-client.on("messageCreate", async (message) => {
+client.on(Events.MessageCreate, async (message) => {
+  console.log(message);
   if (!message.author.bot) {
     message.channel.send("deeznuts");
   }
