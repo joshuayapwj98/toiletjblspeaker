@@ -7,12 +7,14 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
-const { Player, QueryType } = require("discord-player");
+const { Player } = require("discord-player");
+const { registerPlayerEvents } = require('./events/registerPlayerEvents.js');
 
 const commandsPath = path.join(__dirname, './commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+const playerFiles = fs.readdirSync(commandsPath).filter(file => file.startsWith('player') && file.endsWith('.js'));
 
 const client = new Client({ intents: [
   GatewayIntentBits.Guilds,
@@ -21,6 +23,13 @@ const client = new Client({ intents: [
   GatewayIntentBits.GuildMembers,
   GatewayIntentBits.GuildVoiceStates,
 ]});
+client.player = new Player(client, {
+  ytdlOptions: {
+    quality: "highestaudio",
+    highWaterMark: 1 << 25,
+  },
+});
+registerPlayerEvents(client.player);
 
 client.commands = new Collection();
 for (const file of commandFiles) {
@@ -38,14 +47,6 @@ for (const file of eventFiles) {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
 }
-//    const args = message.content.split(" ");
-//    const voiceChannel = message.member.voice.channel;
-//    if (!voiceChannel) {
-
-//    return message.channel.send(
-//        "You need to be in a voice channel to play music!"
-//      );
-//    }
 
 client.login(this.token);
 

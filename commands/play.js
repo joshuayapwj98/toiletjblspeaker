@@ -12,7 +12,6 @@ module.exports = {
   async execute(interaction, client) {
     await interaction.deferReply();
     const query = interaction.options.get("query").value;
-
     const searchResult = await client.player
       .search(query, {
         requestedBy: interaction.user,
@@ -27,7 +26,6 @@ module.exports = {
         metadata: interaction.channel,
       }));
 
-    console.log(client.player.getQueue(interaction.guild));
     try {
       if (!queue.connection)
         await queue.connect(interaction.member.voice.channel);
