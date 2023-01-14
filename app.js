@@ -6,7 +6,7 @@ var fs = require("node:fs");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
-const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
+const { Client, Collection, GatewayIntentBits } = require("discord.js");
 const { Player } = require("discord-player");
 const { registerPlayerEvents } = require('./events/registerPlayerEvents.js');
 
@@ -14,7 +14,6 @@ const commandsPath = path.join(__dirname, './commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
-const playerFiles = fs.readdirSync(commandsPath).filter(file => file.startsWith('player') && file.endsWith('.js'));
 
 const client = new Client({ intents: [
   GatewayIntentBits.Guilds,
@@ -25,7 +24,7 @@ const client = new Client({ intents: [
 ]});
 client.player = new Player(client, {
   ytdlOptions: {
-    quality: "highestaudio",
+    quality: "lowestaudio",
     highWaterMark: 1 << 25,
   },
 });
