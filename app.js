@@ -7,6 +7,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
+const { Player, QueryType } = require("discord-player");
 
 const { token } = process.env.DISCORD_TOKEN;
 const client = new Client({ intents: [
@@ -14,6 +15,7 @@ const client = new Client({ intents: [
   GatewayIntentBits.GuildMessages,
   GatewayIntentBits.MessageContent,
   GatewayIntentBits.GuildMembers,
+  GatewayIntentBits.GuildVoiceStates
 ]});
 
 client.commands = new Collection();
@@ -30,6 +32,9 @@ client.once("disconnect", () => {
   console.log("Disconnect!");
 });
 
+const player = new Player(client);
+
+
 for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
 	const command = require(filePath);
@@ -37,9 +42,20 @@ for (const file of commandFiles) {
 }
 
 client.on(Events.MessageCreate, async (message) => {
-  console.log(message);
+  // console.log(message);
   if (!message.author.bot) {
     message.channel.send("deeznuts");
+  const args = message.content.split(" ");
+
+  const voiceChannel = message.member.voice.channel;
+  if (!voiceChannel) {
+    return message.channel.send(
+      "You need to be in a voice channel to play music!"
+    );
+  }
+
+
+
   }
 });
 
@@ -51,7 +67,7 @@ client.on(Events.InteractionCreate, async interaction => {
 	if (!command) return;
 
 	try {
-		await command.execute(interaction);
+		await command.execute(interaction, player);
 	} catch (error) {
 		console.error(error);
 		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
