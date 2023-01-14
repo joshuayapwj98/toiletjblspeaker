@@ -12,7 +12,7 @@ module.exports = {
 			return;
 		}
 		try {
-			if (interaction.commandName === "play") {
+			if (interaction.commandName === "play" || interaction.commandName === "queue") {
 				await command.execute(interaction, interaction.client);
 			} else {
 				await command.execute(interaction);
