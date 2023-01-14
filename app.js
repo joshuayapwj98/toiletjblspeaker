@@ -1,14 +1,26 @@
+require('dotenv').config();
+
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var dotenv = require('dotenv').config();
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
+
+const { Client, Events, GatewayIntentBits } = require('discord.js');
+const discord_token = process.env.DISCORD_TOKEN;
+const { token } = discord_token;
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+client.once(Events.ClientReady, c => {
+	console.log(`Ready! Logged in as ${c.user.tag}`);
+});
+
+client.login(token);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
