@@ -41,17 +41,6 @@ client.on("messageCreate", async (message) => {
 
 var app = express();
 
-const { Client, Events, GatewayIntentBits } = require('discord.js');
-const discord_token = process.env.DISCORD_TOKEN;
-const { token } = discord_token;
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-
-client.once(Events.ClientReady, c => {
-	console.log(`Ready! Logged in as ${c.user.tag}`);
-});
-
-client.login(token);
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
