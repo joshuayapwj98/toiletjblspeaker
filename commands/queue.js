@@ -7,11 +7,13 @@ module.exports = {
     .setName("queue")
     .setDescription("Get information about the music queue"),
     async execute(interaction, client) {
+        await interaction.deferReply();
         try {
             const queue = await client.player.getQueue(interaction.guild);
+            console.log(queue);
             if (!queue) {
                 await interaction.followUp({
-                    content: `❌ | Queue does not exist!`,
+                    content: `❌ | Queue does not exist`,
                 });
             } else {
                 var result = '';
@@ -22,7 +24,7 @@ module.exports = {
                 }
                 console.log(result);
                 await interaction.followUp({
-                    content: `Queue List\n${result}`,
+                    content: `🎶 | Playing: ${queue.previousTracks[0].title}\n📖 | Queue List\n${result}`,
                 });
             }
         } catch {

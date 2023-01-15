@@ -44,6 +44,6 @@ module.exports = {
     searchResult.playlist
       ? await queue.addTracks(searchResult.tracks)
       : await queue.addTrack(searchResult.tracks[0]);
-    if (!queue.playing) await queue.play();
+      if (!queue.playing) await queue.play().then(queue.playing = true);
   },
 };
